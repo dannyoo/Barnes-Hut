@@ -3,10 +3,14 @@ package main
 import (
 	"fmt"
 	"gifhelper"
+	"os"
 )
 
 func main() {
-
+	command := os.Args[1]
+	if command != "jupiter" && command != "galaxy" && command != "collision"{
+		panic("Usage './barnes-hut command' where command is 'jupiter' or 'galaxy' or 'collision'")
+	}
 	// the following sample parameters may be helpful for the "collide" command
 	// all units are in SI (meters, kg, etc.)
 	// but feel free to change the positions of the galaxies.
