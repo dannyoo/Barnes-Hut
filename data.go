@@ -25,6 +25,10 @@ type OrderedPair struct {
 	y float64
 }
 
+func (v *OrderedPair) Add(v2 OrderedPair) {
+	v.x += v2.x
+	v.y += v2.y
+}
 //QuadTree simply contains a pointer to the root.
 //Another way of doing this would be type QuadTree *Node
 type QuadTree struct {

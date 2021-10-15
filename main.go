@@ -15,8 +15,10 @@ func main() {
 	// all units are in SI (meters, kg, etc.)
 	// but feel free to change the positions of the galaxies.
 
-	g0 := InitializeGalaxy(500, 4e21, 7e22, 2e22)
-	g1 := InitializeGalaxy(500, 4e21, 3e22, 7e22)
+	// g0 := InitializeGalaxy(500, 4e21, 7e22, 2e22)
+	// g1 := InitializeGalaxy(500, 4e21, 3e22, 7e22)
+	g0 := InitializeGalaxy(5, 4e21, 3.5e22, 3.1e22)
+	g1 := InitializeGalaxy(5, 4e21, 3.1e22, 3.5e22)
 
 	// you probably want to apply a "push" function at this point to these galaxies to move
 	// them toward each other to collide.
