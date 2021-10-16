@@ -15,9 +15,9 @@ type Galaxy []*Star
 type Star struct {
 	position, velocity, acceleration OrderedPair
 	mass                             float64
-	radius                           float64
+	radius                           float64 // used for drawing
 	red, blue, green                 uint8
-}
+}// the only things we need for pseudostar is position & mass.
 
 //OrderedPair represents a point or vector.
 type OrderedPair struct {
