@@ -35,23 +35,32 @@ func CreateQuateTree(univ *Universe) QuadTree {
 
 	tree.root = &Node{
 		children: make([]*Node, 4),
-		// star: &Star{
-		// 	position:     OrderedPair{},
-		// 	velocity:     OrderedPair{},
-		// 	acceleration: OrderedPair{},
-		// 	mass:         0,
-		// 	radius:       0,
-		// 	red:          0,
-		// 	blue:         0,
-		// 	green:        0,
-		// },
+		star: &Star{
+			position: OrderedPair{
+				x: 0,
+				y: 0,
+			},
+			velocity: OrderedPair{
+				x: 0,
+				y: 0,
+			},
+			acceleration: OrderedPair{
+				x: 0,
+				y: 0,
+			},
+			mass:   0,
+			radius: 0,
+			red:    0,
+			blue:   0,
+			green:  0,
+		},
 		sector: Quadrant{
 			x:     univ.width,
 			y:     univ.width,
 			width: univ.width,
 		},
 	}
-
+	// fmt.Println(tree.root.star==nil)
 	for _, s := range univ.stars {
 		insert(tree.root, s)
 	}
@@ -67,18 +76,23 @@ func insert(node *Node, star *Star) {
 	if quadIndex == -1 {
 		panic("problem generating quadIndex")
 	}
-
+	// fmt.Println(quadIndex) 
 	// checking if it's there, may be a problem
 	// if node.children[quadIndex] == nil || node.children[quadIndex].sector.width == 0
-	if node.children[quadIndex] == nil {
-		new := Node{
-			children: make([]*Node, 0),
-			star:     star,
-			sector:   getQuadrant(quadIndex, node),
-		}
-		node.children[quadIndex] = &new
+	if node.star == nil {
+		// fmt.Println("why is this different each time? It should be root child at index 2 => ",&node, "beginning call") //important
+		// fmt.Println("node doesn't contain a star") // important
+		// new := &Node{
+		// 	children: make([]*Node, 0),
+		// 	star:     star,
+		// 	sector:   getQuadrant(quadIndex, node),
+		// }
+		node.star = star
+		// fmt.Println(&node, "after insertion") // important
+		// panic("first - no body")
 
-	} else if len(node.children[quadIndex].children) == 4 {
+	} else if len(node.children) == 4 {
+		// fmt.Println("internal node")
 		// node x is an internal node
 		// update the center-of-mass and total mass of x
 		ratio := (node.star.mass / star.mass)
@@ -87,8 +101,21 @@ func insert(node *Node, star *Star) {
 			y: (ratio*node.star.position.y + star.position.y) / (1 + ratio),
 		}
 		node.star.mass += star.mass
+		if node.children[quadIndex] == nil {
+			// fmt.Println("node.children[quadIndex] == nil") //important
+			new := &Node{
+				children: make([]*Node, 0),
+				star:     nil,
+				sector:   getQuadrant(quadIndex, node),
+			}
+			node.children[quadIndex] = new
+		}
+		// fmt.Println("(done) this is root child at index 2",&node.children[quadIndex], "before call") //important
 		insert(node.children[quadIndex], star)
-	} else if len(node.children[quadIndex].children) == 0 {
+	} else if len(node.children) == 0 {
+		// fmt.Println("external node")
+		// panic("worked?")
+		// panic("first")
 		//external node
 		// copy  := make([]*Node, 1)
 		// copy[0] = node.children[quadIndex]
@@ -105,17 +132,21 @@ func insert(node *Node, star *Star) {
 
 		// way 3
 		// var test *Star
-		node.children[quadIndex].children = make([]*Node, 4) //create 4 children
+		node.children = make([]*Node, 4) //create 4 children
 		// test = node.children[quadIndex].star
 		// node.children[quadIndex].star = nil
 		// fmt.Println(test, "<- if this is nil value, the algo will be broken, but if not... we gucci")
-		insert(node.children[quadIndex], node.children[quadIndex].star)
-		insert(node.children[quadIndex], star)
-		node.children[quadIndex].star.mass += star.mass
-		ratio := (node.children[quadIndex].star.mass / star.mass)
-		node.children[quadIndex].star.position = OrderedPair{
-			x: (ratio*node.children[quadIndex].star.position.x + star.position.x) / (1 + ratio),
-			y: (ratio*node.children[quadIndex].star.position.y + star.position.y) / (1 + ratio),
+		old := node.star
+		// fmt.Println("old, ", &old)
+		node.star = &Star{}
+		// insert(node, old)
+		insert(node, star)
+		// panic("d")
+		node.star.mass += old.mass + star.mass
+		ratio := (node.star.mass / star.mass)
+		node.star.position = OrderedPair{
+			x: (ratio*node.star.position.x + star.position.x) / (1 + ratio),
+			y: (ratio*node.star.position.y + star.position.y) / (1 + ratio),
 		}
 		// update the center-of-mass and total mass of x
 
@@ -197,15 +228,16 @@ func CreateComparableUniverse(tree *QuadTree, theta float64, X *Star) (uni Unive
 func thetaStars(node *Node, theta float64, X *Star) []*Star {
 	var starrys = make([]*Star, 0)
 	for _, single := range node.children{
-		if single.star == nil{
+		// if single.star == nil{
+		if single == nil{
 			continue
-		} else if len(single.children) == 4{ // its a internal node
+		} else if len(single.children) == 4 { // its a internal node
 			s := single.sector.width
-			d:= Dist(*single.star, *X)
-			heuristic := s/d
+			d := Dist(*single.star, *X)
+			heuristic := s / d
 			if heuristic > theta {
 				starrys = append(starrys, thetaStars(single, theta, X)...)
-			} else if heuristic <= theta{
+			} else if heuristic <= theta {
 				starrys = append(starrys, single.star)
 			}
 		} else if len(single.children) == 0 { // external node
