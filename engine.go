@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -20,14 +19,8 @@ func BarnesHut(initialUniverse *Universe, numGens int, time, theta float64) []*U
 	return timePoints
 }
 
-// func NewNode(star *Star, quad Quadrant) *Node {
-// 	return &Node{
-// 		children: make([]*Node, 0),
-// 		star:   star,
-// 		// sector: nil,
-// 	}
-// }
-
+// This takes in a universe
+// return a quadtree
 func CreateQuateTree(univ *Universe) QuadTree {
 	tree := QuadTree{
 		root: nil,
@@ -60,13 +53,14 @@ func CreateQuateTree(univ *Universe) QuadTree {
 			width: univ.width,
 		},
 	}
-	// fmt.Println(tree.root.star==nil)
+
 	for _, s := range univ.stars {
 		insert(tree.root, s)
 	}
 	return tree
 }
 
+// This is a recursive function that inserts a star into the node.
 func insert(node *Node, star *Star) {
 	center := OrderedPair{
 		x: node.sector.x + (node.sector.width / 2.0),
@@ -76,24 +70,14 @@ func insert(node *Node, star *Star) {
 	if quadIndex == -1 {
 		panic("problem generating quadIndex")
 	}
-	// fmt.Println(quadIndex) 
-	// checking if it's there, may be a problem
-	// if node.children[quadIndex] == nil || node.children[quadIndex].sector.width == 0
+
 	if node.star == nil {
-		// fmt.Println("why is this different each time? It should be root child at index 2 => ",&node, "beginning call") //important
-		// fmt.Println("node doesn't contain a star") // important
-		// new := &Node{
-		// 	children: make([]*Node, 0),
-		// 	star:     star,
-		// 	sector:   getQuadrant(quadIndex, node),
-		// }
+		// when there is no star in the node
 		node.star = star
-		// fmt.Println(&node, "after insertion") // important
-		// panic("first - no body")
 
 	} else if len(node.children) == 4 {
-		// fmt.Println("internal node")
-		// node x is an internal node
+		// this node is an internal node
+
 		// update the center-of-mass and total mass of x
 		ratio := (node.star.mass / star.mass)
 		node.star.position = OrderedPair{
@@ -101,8 +85,8 @@ func insert(node *Node, star *Star) {
 			y: (ratio*node.star.position.y + star.position.y) / (1 + ratio),
 		}
 		node.star.mass += star.mass
+		//create new node if there isn't one for the quadrant
 		if node.children[quadIndex] == nil {
-			// fmt.Println("node.children[quadIndex] == nil") //important
 			new := &Node{
 				children: make([]*Node, 0),
 				star:     nil,
@@ -110,51 +94,34 @@ func insert(node *Node, star *Star) {
 			}
 			node.children[quadIndex] = new
 		}
-		// fmt.Println("(done) this is root child at index 2",&node.children[quadIndex], "before call") //important
+		//insert the star to the newly created node
 		insert(node.children[quadIndex], star)
 	} else if len(node.children) == 0 {
-		// fmt.Println("external node")
-		// panic("worked?")
-		// panic("first")
-		//external node
-		// copy  := make([]*Node, 1)
-		// copy[0] = node.children[quadIndex]
-		// old := copy[0].star
-		// way2
-		// old:= node.children[quadIndex].star // may not work
-		// psuedostar := Node{
-		// 	children: make([]*Node, 4),
-		// 	sector: node.children[quadIndex].sector,
-		// }
-		// node.children[quadIndex] = &psuedostar
-		// insert(&psuedostar, old)
-		// insert(&psuedostar, star)
+		// external node meaning
 
-		// way 3
-		// var test *Star
+		// current node into an internal node
 		node.children = make([]*Node, 4) //create 4 children
-		// test = node.children[quadIndex].star
-		// node.children[quadIndex].star = nil
-		// fmt.Println(test, "<- if this is nil value, the algo will be broken, but if not... we gucci")
+
 		old := node.star
-		// fmt.Println("old, ", &old)
+
 		node.star = &Star{}
-		// insert(node, old)
+
 		insert(node, star)
-		// panic("d")
+
+		// update the center-of-mass and total mass of x
 		node.star.mass += old.mass + star.mass
 		ratio := (node.star.mass / star.mass)
 		node.star.position = OrderedPair{
 			x: (ratio*node.star.position.x + star.position.x) / (1 + ratio),
 			y: (ratio*node.star.position.y + star.position.y) / (1 + ratio),
 		}
-		// update the center-of-mass and total mass of x
 
 	} else {
 		panic("I didn't plan for this....")
 	}
 }
 
+// Takes a quadrant index and node and returns the Quadrant struct
 func getQuadrant(quadIndex int, node *Node) Quadrant {
 	var quad Quadrant
 	switch quadIndex {
@@ -187,52 +154,55 @@ func getQuadrant(quadIndex int, node *Node) Quadrant {
 			width: node.sector.width / 2.0,
 		}
 	default:
-		fmt.Println("go, sucks")
 		panic("not good generating quadrant from quadIndex")
 	}
 
 	return quad
 }
 
+// Takes a star and center and returns the index
+// used to store the children of the node consistently
 func findQuadrantIndex(star *Star, center OrderedPair) int {
-	// var index int
+
 	// find center, make center 0,0 by dividing
 	if star.position.x <= center.x && star.position.y <= center.y {
 		// bottom left SW
-		// index = 2
 		return 2
 	} else if star.position.x <= center.x && star.position.y >= center.y {
 		// top left NW
-		// index = 0
+
 		return 0
 	} else if star.position.x >= center.x && star.position.y <= center.y {
 		// bottom right SE
-		// index = 3
+
 		return 3
 	} else if star.position.x >= center.x && star.position.y >= center.y {
 		// top right NE
-		// index = 1
+
 		return 1
 	}
 	return -1
 
 }
 
-func CreateComparableUniverse(tree *QuadTree, theta float64, X *Star) (uni Universe) {
+// Take a quadtree and theta and returns a universe of the "stars" (including psuedostars) from the Barnes-Hut heuristic
+func CreateComparableUniverse(tree *QuadTree, theta float64, X *Star, width float64) (uni Universe) {
 
 	uni.stars = thetaStars(tree.root, theta, X)
+	uni.width = width
 
 	return
 }
 
+// Takes a node, theta, and the current "star" and recusively returns a list of star pointers.
 func thetaStars(node *Node, theta float64, X *Star) []*Star {
 	var starrys = make([]*Star, 0)
-	for _, single := range node.children{
+	for _, single := range node.children {
 		// if single.star == nil{
-		if single == nil{
+		if single == nil {
 			continue
 		} else if len(single.children) == 4 { // its a internal node
-			s := single.sector.width
+			s := single.sector.width 
 			d := Dist(*single.star, *X)
 			heuristic := s / d
 			if heuristic > theta {
@@ -253,7 +223,7 @@ func UpdateUniverse(univ *Universe, t, theta float64) *Universe {
 	newUniverse := CopyUniverse(univ)
 	tree := CreateQuateTree(univ)
 	for b := range univ.stars {
-		comparableUniverse := CreateComparableUniverse(&tree, theta, newUniverse.stars[b])
+		comparableUniverse := CreateComparableUniverse(&tree, theta, newUniverse.stars[b], univ.width)
 		// update pos, vel and accel
 		newUniverse.stars[b].Update(&comparableUniverse, t)
 	}

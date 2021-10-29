@@ -19,15 +19,21 @@ func main() {
 		// all units are in SI (meters, kg, etc.)
 		// but feel free to change the positions of the galaxies.
 
-		// g0 := InitializeGalaxy(500, 4e21, 7e22, 2e22)
-		// g1 := InitializeGalaxy(500, 4e21, 3e22, 7e22)
 		g0 := InitializeGalaxy(500, 4e21, 3.5e22, 3.8e22)
 		g1 := InitializeGalaxy(500, 4e21, 5e22, 3.1e22)
-		// push 
+
+		// This code is optional if pushing every star is desired
+		// for _, x := range g0{
+		// 	x.velocity.x = 1e3
+		// }
+		// for _, x := range g1{
+		// 	x.velocity.x = -1e3
+		// }
+		
+		//just pushing the blackholes looks more interesting
 		g0[len(g0)-1].velocity.x = 1e3
 		g1[len(g0)-1].velocity.x = -1e3
-		// g0[len(g0)-1].velocity.y = 0
-		// g1[len(g0)-1].velocity.y = 0
+
 		// you probably want to apply a "push" function at this point to these galaxies to move
 		// them toward each other to collide.
 		// be careful: if you push them too fast, they'll just fly through each other.
@@ -35,24 +41,23 @@ func main() {
 
 		width := 1.0e23
 		galaxies := []Galaxy{g0, g1}
-
 		initialUniverse = InitializeUniverse(galaxies, width)
-		// fmt.Println(initialUniverse.stars[1])
-		// os.Exit(0)
+
 	} else if command == "galaxy" {
-		g0 := InitializeGalaxy(500, 10e21, 3.5e22, 3.1e22)
-		// fmt.Println("init galaxy complete")
+		g0 := InitializeGalaxy(500, 10e21, 1.0e23/2, 1.0e23/2)
 		width := 1.0e23
 		galaxies := []Galaxy{g0}
 		initialUniverse = InitializeUniverse(galaxies, width)
-		// fmt.Println("init universe complete")
 	} else if command == "jupiter" {
-		fmt.Println("this should create jupiter system as stars")
+		initialUniverse = Jupiter()
 	}
 
 	// now evolve the universe: feel free to adjust the following parameters.
-	numGens := 500000
+	numGens := 10000
 	time := 2e14
+	if command == "jupiter" {
+		time = 1.5e11 // this makes it easier to see
+	}
 	theta := 0.5
 
 	timePoints := BarnesHut(initialUniverse, numGens, time, theta)
@@ -60,7 +65,11 @@ func main() {
 	fmt.Println("Simulation run. Now drawing images.")
 	canvasWidth := 1000
 	frequency := 1000
-	scalingFactor := 1e11 // a scaling factor is needed to inflate size of stars when drawn because galaxies are very sparse
+	scalingFactor := 1e11 
+	if command == "jupiter" {
+		scalingFactor = 10e11 // this makes the moons easier to see
+	}
+	// a scaling factor is needed to inflate size of stars when drawn because galaxies are very sparse
 	imageList := AnimateSystem(timePoints, canvasWidth, frequency, scalingFactor)
 
 	fmt.Println("Images drawn. Now generating GIF.")

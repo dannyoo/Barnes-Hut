@@ -84,3 +84,53 @@ func InitializeGalaxy(numOfStars int, r, x, y float64) Galaxy {
 
 	return g
 }
+
+// Returns the pointer to the Jupiter Universe
+func Jupiter() *Universe {
+	g := make(Galaxy, 5)
+	var jupiter, io, europa, ganymede, callisto Star
+	jupiter.red, jupiter.green, jupiter.blue = 223, 227, 202
+	io.red, io.green, io.blue = 249, 249, 165
+	europa.red, europa.green, europa.blue = 132, 83, 52
+	ganymede.red, ganymede.green, ganymede.blue = 76, 0, 153
+	callisto.red, callisto.green, callisto.blue = 0, 153, 76
+
+	jupiter.mass = 1.898 * math.Pow(10, 27)
+	io.mass = 8.9319 * math.Pow(10, 22)
+	europa.mass = 4.7998 * math.Pow(10, 22)
+	ganymede.mass = 1.4819 * math.Pow(10, 23)
+	callisto.mass = 1.0759 * math.Pow(10, 23)
+
+	jupiter.radius = 71000000
+	io.radius = 1821000
+	europa.radius = 1569000
+	ganymede.radius = 2631000
+	callisto.radius = 2410000
+	
+	// the positions were changed so that the "galaxy" would appear in the center
+	center := 1.0e21/2
+	jupiter.position.x, jupiter.position.y = center, center
+	io.position.x, io.position.y = center-center/4.7438330170778, center
+	europa.position.x, europa.position.y = center, center+center/2.98107020420331
+	ganymede.position.x, ganymede.position.y = center+center/1.86846038863976, center
+	callisto.position.x, callisto.position.y = center, center-center/1.06230413767462
+
+	jupiter.velocity.x, jupiter.velocity.y = 0, 0
+	io.velocity.x, io.velocity.y = 0, -17320
+	europa.velocity.x, europa.velocity.y = -13740, 0
+	ganymede.velocity.x, ganymede.velocity.y = 0, 10870
+	callisto.velocity.x, callisto.velocity.y = 8200, 0
+	
+	g[0]= &jupiter
+	g[1]= &io
+	g[2]= &europa
+	g[3]= &ganymede
+	g[4]= &callisto
+
+	var u Universe
+	u.width = 1.0e21
+	u.stars = make([]*Star, 0, len(g))
+	u.stars = append(u.stars, g...)
+	
+	return &u
+}
